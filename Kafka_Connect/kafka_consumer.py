@@ -48,7 +48,7 @@ for msg in consumer:
     mydb.commit()
     cursor.close()
     subdict = {'uuid':msg_json['UUID'], 'resp_id':msg_json['Resp Id'], 'url':msg_json['URL'], 'htmlLink':msg_json['htmlLink']}
-    response_api = requests.post('http://127.0.0.1:8000/pdp/', data=json.dumps(subdict)).json()
+    response_api = requests.post(config['APIServer']['pdp_endpoint'], data=json.dumps(subdict)).json()
     print(response_api)
   except Exception as e:
     print(e)
