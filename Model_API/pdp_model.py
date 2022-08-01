@@ -4,7 +4,7 @@ import configparser
 
 def read_config():
     config = configparser.ConfigParser()
-    config.read('configurations.ini', encoding='utf-8')
+    config.read('config/configurations.ini', encoding='utf-8')
     return config
 
 def get_pdp(URL,html_path):
