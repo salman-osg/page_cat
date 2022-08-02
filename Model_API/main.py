@@ -42,7 +42,7 @@ for i in table_cursor:
     tables.append(i[0])
 
 if "ClickStream_Output" not in tables:
-    table_cursor.execute("CREATE TABLE `O360_PDP`.`ClickStream_Output` (`ID` INT NOT NULL AUTO_INCREMENT,`topic` VARCHAR(200) NULL,`respId` VARCHAR(150) NULL,`surveyId` VARCHAR(50) NULL,`questionId` VARCHAR(50) NULL,`token` VARCHAR(250) NULL,`href` VARCHAR(2000) NULL,`htmlLink` VARCHAR(2000) NULL,`videoLink` VARCHAR(2000) NULL,`url_html_flag` VARCHAR(100) NULL,PRIMARY KEY (`ID`));")
+    table_cursor.execute("CREATE TABLE `O360_PDP`.`ClickStream_Output` (`ID` INT NOT NULL AUTO_INCREMENT,`topic` VARCHAR(200) NULL,`respId` VARCHAR(150) NULL,`surveyId` VARCHAR(50) NULL,`questionId` VARCHAR(50) NULL,`token` VARCHAR(250) NULL,`href` VARCHAR(2000) NULL,`htmlLink` VARCHAR(2000) NULL,`videoLink` VARCHAR(2000) NULL,`page_category` VARCHAR(100) NULL,PRIMARY KEY (`ID`));")
     print("ClickStream_Output table created")
     mydb.commit()
     table_cursor.close()
@@ -69,10 +69,10 @@ async def pdp(input_data:Input_Data):
     htmlPath = htmlLink[htmlLink.find("/downloads/")+11:]
 
     # Call the PDP Model
-    pdp_tag = get_pdp(href, htmlPath)
+    page_tag = get_pdp(href, htmlPath)
 
     # Sending data to Seisens though Kafka
-    output_dict = {'topic':topic, 'respId':respId, 'surveyId':surveyId, 'questionId':questionId, 'token':token, 'href':href, 'htmlLink':htmlLink, 'videoLink':videoLink,'URL/Html_Flag':pdp_tag}
+    output_dict = {'topic':topic, 'respId':respId, 'surveyId':surveyId, 'questionId':questionId, 'token':token, 'href':href, 'htmlLink':htmlLink, 'videoLink':videoLink,'PageCategory':page_tag}
     producer = KafkaProducer(bootstrap_servers=eval(config['KafkaSettings']['bootstrap_servers']),
                         value_serializer=lambda x: 
                         json.dumps(x).encode('utf-8'))
@@ -81,8 +81,8 @@ async def pdp(input_data:Input_Data):
     # Sending Data to MySQL Database
     db = mysql.connector.connect(host=config['MySQLSettings']['host'], user="root", passwd=config['MySQLSettings']['password'], port=int(config['MySQLSettings']['port']), database=config['MySQLSettings']['database'])
     cursor = db.cursor()
-    query = "INSERT into ClickStream_Output(topic,respId,surveyId,questionId,token,href,htmlLink,videoLink,url_html_flag) values(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-    record = [(topic,respId, surveyId, questionId, token, href, htmlLink, videoLink,pdp_tag)]
+    query = "INSERT into ClickStream_Output(topic,respId,surveyId,questionId,token,href,htmlLink,videoLink,page_category) values(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    record = [(topic,respId, surveyId, questionId, token, href, htmlLink, videoLink,page_tag)]
     cursor.executemany(query, record)
     db.commit()
     return output_dict
